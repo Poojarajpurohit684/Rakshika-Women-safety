@@ -1,0 +1,10 @@
+{
+  "name": "rashika-women-safety",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "client:dev": "npm --prefix client run dev",
+    "client:build": "npm --prefix client run build",
+    "server:dev": "npm --prefix server run dev"
+  }
+}
