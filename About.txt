@@ -1,0 +1,543 @@
+================================================================================
+SLIDE 1 – TITLE SLIDE
+================================================================================
+
+PROJECT TITLE:
+RAKSHIKA – Women's Personal Safety Application
+
+"Rakshika" (Sanskrit: Protector)
+A Smart, AI-Powered Safety Companion for Women
+
+Presented by : [Your Name]
+Roll No.     : [Your Roll No.]
+Department   : [Department Name]
+College      : [College Name]
+Guide        : [Guide Name]
+Year         : 2025–2026
+
+================================================================================
+SLIDE 2 – PROBLEM STATEMENT
+================================================================================
+
+THE PROBLEM
+
+• India recorded 4.45 lakh+ crimes against women in 2022 (NCRB)
+• Women in danger often cannot make a phone call — silence is critical
+• Existing tools are fragmented — no single app covers all safety needs
+• Government helplines (112, 100, 1091) require voice calls — too slow
+• No widely available discreet escape mechanism exists
+• Trusted contacts have no way to track location in real time
+• Most safety apps require installation — not instantly accessible
+
+CORE GAPS IN EXISTING SOLUTIONS:
+  ✗ No AI-based guidance
+  ✗ No live public tracking link
+  ✗ No fake call feature
+  ✗ No Indian SMS optimization
+  ✗ No unified platform
+
+================================================================================
+SLIDE 3 – PROPOSED SOLUTION
+================================================================================
+
+INTRODUCING RAKSHIKA
+
+A full-stack Progressive Web App (PWA) that combines 7 safety features
+into one fast, mobile-first, AI-powered platform.
+
+KEY HIGHLIGHTS:
+  ✔ One-tap SOS — alerts all trusted contacts via SMS instantly
+  ✔ Live GPS location sharing via a public link (no app needed to view)
+  ✔ Nearby safe zones — police, hospitals, bus stops on a map
+  ✔ Fake call simulator — discreet escape from unsafe situations
+  ✔ AI chatbot (Google Gemini) — real-time safety guidance
+  ✔ Trusted contacts management
+  ✔ No installation required — works in any browser (PWA)
+
+TAGLINE:
+  "One tap. Instant help. Always with you."
+
+================================================================================
+SLIDE 4 – TECHNOLOGY STACK
+================================================================================
+
+TECH STACK OVERVIEW
+
+FRONTEND:
+  • React 19          — UI framework
+  • Vite 8            — Build tool
+  • Tailwind CSS 4    — Styling
+  • Framer Motion     — Animations
+  • Mapbox GL         — Interactive maps
+  • React Router 7    — Navigation
+  • Axios             — API calls
+  • Lucide React      — Icons
+
+BACKEND:
+  • Node.js + Express 5  — REST API server
+  • MongoDB + Mongoose 9 — Database
+  • JWT + bcryptjs       — Auth & security
+  • Nodemailer           — Email alerts
+
+EXTERNAL APIS & SERVICES:
+  • Google Gemini 1.5 Flash  — AI chatbot
+  • Google Maps Places API   — Safe zone discovery
+  • Fast2SMS                 — Indian SMS (primary)
+  • Twilio                   — SMS/WhatsApp (fallback)
+  • Mapbox                   — Map rendering
+
+TESTING:
+  • Vitest + React Testing Library + jsdom
+
+================================================================================
+SLIDE 5 – SYSTEM ARCHITECTURE
+================================================================================
+
+THREE-TIER ARCHITECTURE
+
+┌─────────────────────────────────────────────┐
+│           CLIENT (Browser / PWA)            │
+│  React 19 · Vite · Tailwind · Mapbox GL     │
+│  Pages: Dashboard, Contacts, SafeZones,     │
+│         FakeCall, Share, Login, Awareness   │
+└──────────────────┬──────────────────────────┘
+                   │  HTTPS REST API (Axios)
+┌──────────────────▼──────────────────────────┐
+│         SERVER (Node.js / Express 5)        │
+│  Routes: /auth /contacts /location          │
+│          /sos  /share  /places  /chat       │
+│  Middleware: JWT Authentication             │
+└────┬──────────────┬──────────────┬──────────┘
+     │              │              │
+┌────▼────┐  ┌──────▼──────┐  ┌───▼──────────────────┐
+│ MongoDB │  │ Gemini AI   │  │ Twilio / Fast2SMS /   │
+│Mongoose │  │ Google Maps │  │ Nodemailer / Mapbox   │
+└─────────┘  └─────────────┘  └──────────────────────┘
+
+DATA FLOW:
+  User → React UI → Axios → Express API → MongoDB / External APIs → Response
+
+================================================================================
+SLIDE 6 – DATABASE DESIGN
+================================================================================
+
+MONGODB COLLECTIONS (3 Collections)
+
+USERS COLLECTION:
+  ┌──────────┬──────────┬──────────────────────────────┐
+  │ Field    │ Type     │ Description                  │
+  ├──────────┼──────────┼──────────────────────────────┤
+  │ _id      │ ObjectId │ Primary key (auto)           │
+  │ name     │ String   │ Full name (required)         │
+  │ email    │ String   │ Unique, indexed              │
+  │ password │ String   │ bcrypt hashed                │
+  │ createdAt│ Date     │ Auto timestamp               │
+  └──────────┴──────────┴──────────────────────────────┘
+
+CONTACTS COLLECTION:
+  ┌──────────┬──────────┬──────────────────────────────┐
+  │ userId   │ ObjectId │ Ref → User (indexed)         │
+  │ name     │ String   │ Contact name                 │
+  │ phone    │ String   │ 10-digit mobile number       │
+  └──────────┴──────────┴──────────────────────────────┘
+
+LOCATIONS COLLECTION:
+  ┌──────────┬──────────┬──────────────────────────────┐
+  │ userId   │ ObjectId │ Ref → User (indexed)         │
+  │ lat      │ Number   │ GPS latitude                 │
+  │ lng      │ Number   │ GPS longitude                │
+  │ accuracy │ Number   │ Accuracy in meters           │
+  │ isLive   │ Boolean  │ Live sharing active flag     │
+  └──────────┴──────────┴──────────────────────────────┘
+
+RELATIONSHIPS:
+  • One USER → Many CONTACTS (1:N)
+  • One USER → Many LOCATIONS (1:N)
+
+================================================================================
+SLIDE 7 – FEATURE 1: SOS ALERT SYSTEM
+================================================================================
+
+SOS ALERT — HOW IT WORKS
+
+TRIGGER FLOW:
+  1. User taps the SOS button on the Dashboard
+  2. A 5-second countdown begins (prevents accidental triggers)
+  3. User can cancel within 5 seconds
+  4. On confirmation:
+     → GPS coordinates are captured from the browser
+     → All trusted contacts are fetched from MongoDB
+     → SMS sent to each contact via Fast2SMS / Twilio
+     → Fallback email sent via Nodemailer (if configured)
+  5. User receives confirmation with number of contacts notified
+
+SMS MESSAGE FORMAT:
+  "SOS ALERT! I need help.
+   Location: https://maps.google.com/?q=LAT,LNG
+   Track live: https://rakshika.app/share/USER_ID"
+
+KEY CODE (server/routes/sos.js):
+  const contacts = await Contact.find({ userId: req.user.id });
+  const message = `SOS ALERT! I need help. Location: ${googleLink} Track: ${liveLink}`;
+  for (const phone of phones) {
+    await sendSMS(phone, message);
+  }
+
+SMS PROVIDERS:
+  • Primary  : Fast2SMS (Indian numbers, no upgrade needed)
+  • Fallback : Twilio (international)
+  • Fallback : Nodemailer (email)
+
+================================================================================
+SLIDE 8 – FEATURE 2: LIVE LOCATION SHARING
+================================================================================
+
+LIVE LOCATION SHARING — HOW IT WORKS
+
+USER SIDE:
+  • User toggles "Share Location" on the Dashboard
+  • Browser's Geolocation API (watchPosition) tracks GPS in real time
+  • Coordinates are sent to the server and saved in the Locations collection
+  • A unique public URL is generated: /share/:userId
+
+RECIPIENT SIDE (no app needed):
+  • Anyone with the link opens it in any browser
+  • The Share page fetches the latest location every 15 seconds
+  • Location is displayed on an interactive Mapbox GL map
+  • Shows: latitude, longitude, live status indicator, last updated time
+
+KEY CODE (useGeolocation hook):
+  watchId.current = navigator.geolocation.watchPosition(
+    (p) => {
+      const coords = { lat: p.coords.latitude, lng: p.coords.longitude };
+      setPos(coords);
+      onUpdate?.(coords);  // pushes to server
+    },
+    { enableHighAccuracy: true, maximumAge: 10000 }
+  );
+
+AUTO-REFRESH (Share page):
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 15000);  // refresh every 15 seconds
+    return () => clearInterval(t);
+  }, [userId]);
+
+SECURITY:
+  • Share URL is public but contains only location data
+  • No personal information (name, phone, email) is exposed
+  • End-to-end encrypted label displayed to reassure recipients
+
+================================================================================
+SLIDE 9 – FEATURE 3: SAFE ZONE DISCOVERY
+================================================================================
+
+SAFE ZONES — HOW IT WORKS
+
+PURPOSE:
+  Help users quickly find the nearest safe locations during an emergency.
+
+PLACE TYPES SUPPORTED:
+  🔵 Police Stations
+  🟢 Hospitals
+  🟡 Bus Stops
+
+FLOW:
+  1. User opens the Safe Zones page
+  2. Browser captures current GPS coordinates
+  3. User taps "Find Safe Places"
+  4. Server queries Google Places API for each type within 2 km radius
+  5. Results are sorted by distance (Haversine formula)
+  6. Displayed on Mapbox GL map + scrollable list with:
+     → Place name and type badge
+     → Distance (meters or km)
+     → Google rating (stars)
+     → "Nearest" badge on closest result
+     → Direct navigation link to Google Maps
+
+HAVERSINE DISTANCE FORMULA:
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;  // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+              Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+FILTER OPTIONS:
+  All | Police | Hospital | Bus Stop
+
+================================================================================
+SLIDE 10 – FEATURE 4: FAKE CALL SIMULATOR
+================================================================================
+
+FAKE CALL — HOW IT WORKS
+
+PURPOSE:
+  Allow users to discreetly exit uncomfortable or unsafe situations by
+  simulating a realistic incoming phone call.
+
+FEATURES:
+  • Select caller identity: Papa or Mummy
+  • Set call delay: Now / 10 seconds / 30 seconds / 1 minute
+  • Realistic incoming call screen with pulsing animation
+  • Ringtone audio playback (loops until answered or declined)
+  • Accept / Decline buttons
+  • On answering: pre-scripted Hindi voice message via Web Speech API
+  • Live call timer display
+  • Countdown shown before call appears
+
+CALLER SCRIPTS (Hindi, spoken via Web Speech API):
+  Papa: "Beta main bahar hoon, 2 minute mein pahunch raha hoon."
+        "Hello beta, main gate pe hoon. Jaldi aao."
+
+  Mummy: "Beta main paas hoon, tension mat lo."
+         "Phone pe raho, main aa rahi hoon."
+
+KEY CODE:
+  // Trigger call with delay
+  const t = setInterval(() => {
+    setCountdown(prev => {
+      if (prev <= 1) { clearInterval(t); triggerCall(); }
+      return prev - 1;
+    });
+  }, 1000);
+
+  // Voice message on answer
+  const u = new SpeechSynthesisUtterance(script);
+  u.lang = 'hi-IN';
+  window.speechSynthesis.speak(u);
+
+NOTE: Entirely browser-based — no server call required.
+
+================================================================================
+SLIDE 11 – FEATURE 5: AI SAFETY CHATBOT
+================================================================================
+
+AI CHATBOT — HOW IT WORKS
+
+POWERED BY: Google Gemini 1.5 Flash
+
+SYSTEM PROMPT:
+  "You are Rakshika, a safety assistant for women. Your goal is to provide
+   safety advice and help users in distress. You can understand commands like
+   'send SOS', 'share location', 'find safe zones', or 'trigger a fake call'.
+   Keep your responses concise, empathetic, and focused on safety."
+
+CAPABILITIES:
+  • Answers safety-related questions in natural language
+  • Recognizes and executes safety commands:
+      → "send SOS" / "emergency"  → triggers SOS alert
+      → "share location"          → starts location sharing
+      → "find safe zones" / "police" / "hospital" → navigates to Safe Zones
+      → "fake call" / "phone"     → navigates to Fake Call page
+  • Maintains full conversation history for context
+  • Voice output mode (text-to-speech via Web Speech API)
+  • Falls back to mock responses if API key is unavailable
+
+COMMAND DETECTION (client-side, before API call):
+  if (lower.includes('sos') || lower.includes('emergency')) {
+    onSOS?.();  // triggers SOS directly
+  } else if (lower.includes('fake') || lower.includes('call')) {
+    navigate('/fake-call');
+  }
+
+FALLBACK MOCK RESPONSES (when offline):
+  "Would you like me to help you share your location or send an SOS alert?"
+  "Stay safe and remember you can reach your trusted contacts anytime."
+
+================================================================================
+SLIDE 12 – FEATURE 6 & 7: CONTACTS + AUTHENTICATION
+================================================================================
+
+TRUSTED CONTACTS MANAGEMENT
+
+FEATURES:
+  • Add contact: name + 10-digit phone number
+  • View all contacts with avatar initials and color gradients
+  • Search contacts by name or phone number
+  • Mark a contact as Priority (star)
+  • Direct call button (tel: link)
+  • Delete contact with confirmation
+  • Animated add/remove transitions (Framer Motion)
+  • Security note: "Contacts are securely stored"
+
+API ENDPOINTS:
+  GET    /contacts        → fetch all contacts for user
+  POST   /contacts        → add new contact
+  DELETE /contacts/:id    → remove contact
+
+─────────────────────────────────────────────────────────────────────────────
+
+USER AUTHENTICATION
+
+REGISTRATION:
+  • Input: name, email, password
+  • Password hashed with bcrypt (salt factor: 10)
+  • Duplicate email check
+  • Returns: JWT token (7-day expiry) + user object
+
+LOGIN:
+  • Input: email, password
+  • bcrypt.compare() validates password
+  • Returns: JWT token + user object
+
+JWT MIDDLEWARE (all protected routes):
+  const token = req.headers.authorization?.slice(7);
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
+  req.user = { id: payload.id, email: payload.email };
+
+CLIENT-SIDE:
+  • Token stored in localStorage as 'rakshika_token'
+  • Auto-redirect to /login on 401 response
+  • AuthContext provides auth state across all components
+
+================================================================================
+SLIDE 13 – TESTING
+================================================================================
+
+TESTING STRATEGY
+
+TESTING LEVELS:
+  1. Unit Testing      — Individual components and functions
+  2. Integration Testing — API endpoints with database
+  3. System Testing    — End-to-end user flows
+  4. Manual Testing    — UI/UX on mobile and desktop
+
+TOOLS USED:
+  • Vitest                  — Test runner
+  • React Testing Library   — Component testing
+  • jsdom                   — DOM simulation
+  • fast-check              — Property-based testing
+  • Postman                 — API endpoint testing
+
+TEST CASES SUMMARY:
+  ┌────────────────────────────────┬──────────┬──────────┐
+  │ Test Case                      │ Expected │ Result   │
+  ├────────────────────────────────┼──────────┼──────────┤
+  │ Register with valid data       │ 200 + JWT│ PASS     │
+  │ Register with duplicate email  │ 400 error│ PASS     │
+  │ Login with correct credentials │ 200 + JWT│ PASS     │
+  │ Login with wrong password      │ 400 error│ PASS     │
+  │ Access protected route no token│ 401 error│ PASS     │
+  │ Add trusted contact            │ 201 saved│ PASS     │
+  │ Delete trusted contact         │ 200 ok   │ PASS     │
+  │ Trigger SOS (with contacts)    │ SMS sent │ PASS     │
+  │ Trigger SOS (no contacts)      │ 0 notified│ PASS    │
+  │ Get nearby places              │ Results  │ PASS     │
+  │ Chat with Gemini AI            │ AI reply │ PASS     │
+  │ Share page loads location      │ Map shown│ PASS     │
+  │ Fake call triggers ringtone    │ Audio    │ PASS     │
+  │ Dashboard renders correctly    │ No crash │ PASS     │
+  │ JWT expiry redirects to login  │ /login   │ PASS     │
+  └────────────────────────────────┴──────────┴──────────┘
+
+MOCK MODE TESTING:
+  • MOCK_MODE=1 enables in-memory storage (no MongoDB needed)
+  • All routes tested in mock mode for CI/CD compatibility
+
+================================================================================
+SLIDE 14 – CONCLUSION & FUTURE ENHANCEMENTS
+================================================================================
+
+CONCLUSION
+
+WHAT WAS ACHIEVED:
+  ✔ Built a complete full-stack women's safety PWA from scratch
+  ✔ Integrated 7 safety features in one unified platform
+  ✔ AI chatbot with natural language command execution
+  ✔ Real-time GPS tracking with public shareable link
+  ✔ Indian SMS delivery via Fast2SMS (no Twilio upgrade needed)
+  ✔ Secure JWT authentication with bcrypt password hashing
+  ✔ Mobile-first, dark-themed, responsive UI
+  ✔ Mock mode for development without live database
+  ✔ PWA support — installable without app store
+
+IMPACT:
+  • Reduces emergency response time from minutes to seconds
+  • Works on any smartphone browser — no installation barrier
+  • Empowers women with technology that is fast, discreet, and intelligent
+
+─────────────────────────────────────────────────────────────────────────────
+
+FUTURE ENHANCEMENTS
+
+SHORT TERM:
+  → Push notifications (Web Push API) for SOS confirmation
+  → WhatsApp alert integration (Twilio WhatsApp API already integrated)
+  → Shake-to-SOS using device accelerometer
+  → Voice-activated SOS ("Hey Rakshika, SOS")
+  → Offline mode with service worker caching
+
+MEDIUM TERM:
+  → Native Android/iOS app (React Native)
+  → Community safety heatmap (crowdsourced unsafe zone reporting)
+  → Integration with 112 India emergency dispatch API
+  → Multi-language support (Hindi, Tamil, Telugu, Bengali)
+  → Wearable device integration (smartwatch SOS button)
+
+LONG TERM:
+  → AI-powered route safety scoring
+  → Real-time crowd-sourced safety alerts
+  → Integration with smart city infrastructure
+  → Anonymous incident reporting to authorities
+
+================================================================================
+SLIDE 15 – REFERENCES & THANK YOU
+================================================================================
+
+REFERENCES
+
+[1] National Crime Records Bureau (NCRB), "Crime in India 2022 Statistics,"
+    Ministry of Home Affairs, Government of India, 2023.
+    Available: https://ncrb.gov.in
+
+[2] React Documentation, Meta Open Source, 2024.
+    Available: https://react.dev
+
+[3] Express.js Documentation, OpenJS Foundation, 2024.
+    Available: https://expressjs.com
+
+[4] MongoDB Documentation, MongoDB Inc., 2024.
+    Available: https://www.mongodb.com/docs
+
+[5] Google Gemini AI API Documentation, Google LLC, 2024.
+    Available: https://ai.google.dev
+
+[6] Google Maps Places API Documentation, Google LLC, 2024.
+    Available: https://developers.google.com/maps/documentation/places
+
+[7] Twilio SMS API Documentation, Twilio Inc., 2024.
+    Available: https://www.twilio.com/docs/sms
+
+[8] Fast2SMS API Documentation, Fast2SMS, 2024.
+    Available: https://www.fast2sms.com/docs
+
+[9] Mapbox GL JS Documentation, Mapbox, 2024.
+    Available: https://docs.mapbox.com/mapbox-gl-js
+
+[10] JSON Web Tokens (JWT) — RFC 7519, IETF, 2015.
+     Available: https://datatracker.ietf.org/doc/html/rfc7519
+
+[11] Progressive Web Apps Documentation, Google Developers, 2024.
+     Available: https://web.dev/progressive-web-apps
+
+[12] Vitest Documentation, Vitest Team, 2024.
+     Available: https://vitest.dev
+
+─────────────────────────────────────────────────────────────────────────────
+
+THANK YOU
+
+"Technology in the right hands can save lives."
+
+Project   : Rakshika – Women's Personal Safety Application
+Presented : [Your Name] | Roll No. [Your Roll No.]
+Guide     : [Guide Name]
+College   : [College Name] | [Year]
+
+Questions & Feedback Welcome
+
+================================================================================
