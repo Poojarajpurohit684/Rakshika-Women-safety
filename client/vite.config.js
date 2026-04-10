@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vite.dev/config/
 export default defineConfig({
   test: {
     environment: 'jsdom',
@@ -11,27 +9,5 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
-      manifest: {
-        name: 'Rakshika - Women Safety App',
-        short_name: 'Rakshika',
-        description: 'Safety app for women with SOS and live tracking',
-        theme_color: '#ff4b5c',
-        icons: [
-          {
-            src: 'favicon.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
-          },
-          {
-            src: 'favicon.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-          },
-        ],
-      },
-    }),
   ],
 })
