@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const auth = require('../middleware/auth');
 const Contact = process.env.MOCK_MODE === '1' ? null : require('../models/Contact');
+const SOSLog = process.env.MOCK_MODE === '1' ? null : require('../models/SOSLog');
 const store = process.env.MOCK_MODE === '1' ? require('../utils/store') : null;
 const { sendAlert } = require('../utils/notifications');
 const { sendSMS } = require('../utils/twilio');
@@ -46,12 +47,32 @@ router.post('/trigger', async (req, res) => {
     if (fallbackEmail) {
       await sendAlert({ to: fallbackEmail, message });
     }
+
+    // Save SOS log
+    if (SOSLog) {
+      await SOSLog.create({ userId: req.user.id, lat, lng, notified: phones.length, status: 'sent' });
+    }
+
     res.json({ 
       ok: true, 
       notified: phones.length, 
       liveLink,
       details: `Alert sent to ${phones.length} contacts via SMS` 
     });
+  } catch (e) {
+    if (SOSLog) {
+      await SOSLog.create({ userId: req.user.id, lat, lng, notified: 0, status: 'failed' }).catch(() => {});
+    }
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /sos/history — last 10 SOS events
+router.get('/history', async (req, res) => {
+  try {
+    if (process.env.MOCK_MODE === '1') return res.json([]);
+    const logs = await SOSLog.find({ userId: req.user.id }).sort({ createdAt: -1 }).limit(10);
+    res.json(logs);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

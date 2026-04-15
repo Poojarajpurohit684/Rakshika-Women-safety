@@ -44,23 +44,25 @@ export default function SafeRoute() {
   async function loadNearby() {
     if (!pos) return
     setLoading(true)
-    let results = []
+    setPlaces([])
+    // Progressive loading — police first (most urgent), then hospital, then bus
     for (const t of ['police', 'hospital', 'bus_station']) {
-      const { data } = await api.get(`/places/nearby?lat=${pos.lat}&lng=${pos.lng}&radius=2000&type=${t}`)
-      const mapped = (data.results || []).map(r => ({
-        id: r.place_id,
-        lat: r.geometry.location.lat,
-        lng: r.geometry.location.lng,
-        name: r.name,
-        address: r.vicinity,
-        rating: r.rating,
-        type: t,
-        distance: getDistance(pos.lat, pos.lng, r.geometry.location.lat, r.geometry.location.lng),
-      }))
-      results.push(...mapped)
+      try {
+        const { data } = await api.get(`/places/nearby?lat=${pos.lat}&lng=${pos.lng}&radius=2000&type=${t}`)
+        const mapped = (data.results || []).map(r => ({
+          id: r.place_id,
+          lat: r.geometry.location.lat,
+          lng: r.geometry.location.lng,
+          name: r.name,
+          address: r.vicinity,
+          rating: r.rating,
+          type: t,
+          distance: getDistance(pos.lat, pos.lng, r.geometry.location.lat, r.geometry.location.lng),
+        }))
+        // Update state after each type so results appear progressively
+        setPlaces(prev => [...prev, ...mapped].sort((a, b) => a.distance - b.distance))
+      } catch { /* continue with next type */ }
     }
-    results.sort((a, b) => a.distance - b.distance)
-    setPlaces(results)
     setLoading(false)
   }
 
@@ -204,7 +206,10 @@ export default function SafeRoute() {
       <nav className="nav-bar" role="navigation" aria-label="Main navigation">
         <Link to="/" className="nav-item"><Home className="w-5 h-5" /><span>Home</span></Link>
         <Link to="/contacts" className="nav-item"><Users className="w-5 h-5" /><span>Circle</span></Link>
-        <Link to="/safe-route" className="nav-item active"><ShieldAlert className="w-5 h-5" /><span>SafeZones</span></Link>
+        <Link to="/safe-route" className="nav-item active">
+          <ShieldAlert className="w-5 h-5" /><span>SafeZones</span>
+          <div className="w-4 h-0.5 rounded-full mt-0.5" style={{ background: '#e91e8c' }} />
+        </Link>
         <Link to="/fake-call" className="nav-item"><PhoneCall className="w-5 h-5" /><span>FakeCall</span></Link>
       </nav>
     </div>

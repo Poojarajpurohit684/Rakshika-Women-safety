@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Trash2, Phone, Home, ShieldAlert,
   PhoneCall, Plus, Search, Star,
-  Lock
+  Lock, CheckCircle2, Send
 } from 'lucide-react'
 
 export default function TrustedContacts() {
@@ -16,6 +16,8 @@ export default function TrustedContacts() {
   const [isAdding, setIsAdding] = useState(false)
   const [search, setSearch]     = useState('')
   const [primaryId, setPrimaryId] = useState(null)
+  const [verifying, setVerifying] = useState(null)
+  const [verified, setVerified] = useState({})
 
   async function load() {
     try {
@@ -47,6 +49,15 @@ export default function TrustedContacts() {
     if (!window.confirm('Remove this contact?')) return
     await api.delete(`/contacts/${id}`)
     load()
+  }
+
+  async function verify(id) {
+    setVerifying(id)
+    try {
+      await api.post(`/contacts/${id}/verify`)
+      setVerified(v => ({ ...v, [id]: true }))
+    } catch { alert('Could not send verification SMS') }
+    finally { setVerifying(null) }
   }
 
   const filtered = items.filter(i =>
@@ -221,6 +232,21 @@ export default function TrustedContacts() {
                   >
                     <Phone className="w-4 h-4" />
                   </a>
+                  <button
+                    onClick={() => verify(c._id)}
+                    disabled={verifying === c._id || verified[c._id]}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+                    style={{ color: verified[c._id] ? '#34d399' : 'rgba(251,191,36,0.70)' }}
+                    title="Send test SMS to verify"
+                    aria-label="Verify contact"
+                  >
+                    {verifying === c._id
+                      ? <Send className="w-3.5 h-3.5 animate-pulse" />
+                      : verified[c._id]
+                        ? <CheckCircle2 className="w-4 h-4" />
+                        : <Send className="w-3.5 h-3.5" />
+                    }
+                  </button>
                   <button
                     onClick={() => setPrimaryId(c._id)}
                     className="w-8 h-8 rounded-lg flex items-center justify-center transition-all"

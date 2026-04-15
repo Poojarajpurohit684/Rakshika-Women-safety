@@ -1,5 +1,8 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import './App.css'
+import { useEffect, useState, useContext } from 'react'
+import { getToken, setToken, getUser, setUser } from './auth'
+import { AuthContext } from './AuthContext'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -8,9 +11,10 @@ import FakeCall from './pages/FakeCall.jsx'
 import SafeRoute from './pages/SafeRoute.jsx'
 import Share from './pages/Share.jsx'
 import Awareness from './pages/Awareness.jsx'
-import { useEffect, useState, useContext } from 'react'
-import { getToken, setToken, getUser, setUser } from './auth'
-import { AuthContext } from './AuthContext'
+import SplashScreen from './components/SplashScreen.jsx'
+import OnboardingTour from './components/OnboardingTour.jsx'
+import BatteryWarning from './components/BatteryWarning.jsx'
+import { AnimatePresence } from 'framer-motion'
 
 function AppRoutes() {
   const { auth } = useContext(AuthContext)
@@ -35,6 +39,19 @@ function App() {
     const u = getUser()
     return t ? { token: t, user: u } : null
   })
+  const [splash, setSplash] = useState(true)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  useEffect(() => {
+    // Show splash for 2.2s
+    const t = setTimeout(() => {
+      setSplash(false)
+      // Show onboarding only for first-time users
+      const seen = localStorage.getItem('rakshika_onboarded')
+      if (!seen && auth) setShowOnboarding(true)
+    }, 2200)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (auth?.token) {
@@ -43,8 +60,18 @@ function App() {
     }
   }, [auth])
 
+  function doneOnboarding() {
+    localStorage.setItem('rakshika_onboarded', '1')
+    setShowOnboarding(false)
+  }
+
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
+      <BatteryWarning />
+      <SplashScreen visible={splash} />
+      <AnimatePresence>
+        {showOnboarding && <OnboardingTour onDone={doneOnboarding} />}
+      </AnimatePresence>
       <AppRoutes />
     </AuthContext.Provider>
   )

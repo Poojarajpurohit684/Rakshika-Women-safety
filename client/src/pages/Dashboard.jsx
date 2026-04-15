@@ -263,10 +263,17 @@ export default function Dashboard() {
   const [contactsCount, setContactsCount] = useState(0)
   const [isSOSPressed, setIsSOSPressed] = useState(false)
   const [screenShake, setScreenShake] = useState(false)
+  const [sosHistory, setSOSHistory] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [lastSOSTime, setLastSOSTime] = useState(null)
+  const [lastShareTime, setLastShareTime] = useState(null)
+  const [voiceListening, setVoiceListening] = useState(false)
   const countdownTimer = useRef(null)
   const checkInTimerRef = useRef(null)
   const longPressTimer = useRef(null)
   const lastUpdate = useRef(0)
+  const shakeRef = useRef({ lastX: null, lastY: null, lastZ: null, lastTime: 0 })
+  const tickAudio = useRef(null)
 
   useEffect(() => { getOnce() }, [])
   useEffect(() => {
@@ -321,6 +328,8 @@ export default function Dashboard() {
     }
     try {
       const { data } = await api.post('/sos/trigger', coords)
+      setLastSOSTime(new Date())
+      api.get('/sos/history').then(r => setSOSHistory(r.data)).catch(() => {})
       if (data.notified === 0) { setStatus('SOS Sent (No Contacts!)'); alert('SOS Sent! However, you have no emergency contacts saved in your circle.') }
       else { setStatus(`SOS → ${data.notified} Guardians`); alert(`EMERGENCY SOS SENT! Notified ${data.notified} guardians with your location.`) }
     } catch (e) {
@@ -331,10 +340,29 @@ export default function Dashboard() {
 
   function startSOSCountdown() {
     if (sosCountdown > 0) return
+    // Vibrate pattern
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200])
     setSosCountdown(5)
     countdownTimer.current = setInterval(() => {
       setSosCountdown(prev => {
-        if (prev <= 1) { clearInterval(countdownTimer.current); triggerSOS(); return 0 }
+        // Tick vibration + beep
+        if (navigator.vibrate) navigator.vibrate(80)
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)()
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.connect(gain); gain.connect(ctx.destination)
+          osc.frequency.value = prev <= 2 ? 880 : 440
+          gain.gain.setValueAtTime(0.3, ctx.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
+          osc.start(); osc.stop(ctx.currentTime + 0.15)
+        } catch {}
+        if (prev <= 1) {
+          clearInterval(countdownTimer.current)
+          if (navigator.vibrate) navigator.vibrate([400, 100, 400, 100, 400])
+          triggerSOS()
+          return 0
+        }
         return prev - 1
       })
     }, 1000)
@@ -361,6 +389,56 @@ export default function Dashboard() {
     }
     fetchContacts()
   }, [])
+
+  // Fetch SOS history
+  useEffect(() => {
+    api.get('/sos/history').then(r => setSOSHistory(r.data)).catch(() => {})
+  }, [])
+
+  // Shake-to-SOS detection
+  useEffect(() => {
+    function handleMotion(e) {
+      const { x, y, z } = e.accelerationIncludingGravity || {}
+      if (x == null) return
+      const now = Date.now()
+      const s = shakeRef.current
+      if (s.lastX !== null && now - s.lastTime > 100) {
+        const delta = Math.abs(x - s.lastX) + Math.abs(y - s.lastY) + Math.abs(z - s.lastZ)
+        if (delta > 60 && now - s.lastTime > 1000) {
+          s.lastTime = now
+          setScreenShake(true)
+          setTimeout(() => setScreenShake(false), 500)
+          startSOSCountdown()
+        }
+      }
+      s.lastX = x; s.lastY = y; s.lastZ = z; s.lastTime = now
+    }
+    window.addEventListener('devicemotion', handleMotion)
+    return () => window.removeEventListener('devicemotion', handleMotion)
+  }, [])
+
+  // Voice SOS — Web Speech Recognition
+  function startVoiceSOS() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) return
+    const rec = new SR()
+    rec.lang = 'en-IN'
+    rec.continuous = false
+    rec.interimResults = false
+    setVoiceListening(true)
+    rec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript.toLowerCase()
+      if (transcript.includes('help') || transcript.includes('sos') || transcript.includes('emergency')) {
+        setScreenShake(true)
+        setTimeout(() => setScreenShake(false), 500)
+        startSOSCountdown()
+      }
+      setVoiceListening(false)
+    }
+    rec.onerror = () => setVoiceListening(false)
+    rec.onend = () => setVoiceListening(false)
+    rec.start()
+  }
 
   const clearNotifications = () => setNotifications([])
   const handleLogout = () => {
@@ -794,6 +872,130 @@ export default function Dashboard() {
 
         {/* ── AI ASSISTANT ── */}
         <ChatAssistant onShare={() => !isSharing && toggleSharing()} onSOS={startSOSCountdown} isDark={isDark} />
+
+        {/* ── VOICE SOS ── */}
+        <button onClick={startVoiceSOS}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl border transition-all tap-feedback"
+          style={{
+            background: voiceListening
+              ? (isDark ? 'rgba(233,30,140,0.12)' : 'rgba(233,30,140,0.08)')
+              : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)'),
+            borderColor: voiceListening ? 'rgba(233,30,140,0.40)' : (isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.12)')
+          }}
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{
+              background: voiceListening ? 'linear-gradient(135deg, #e91e8c, #7b2ff7)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(233,30,140,0.08)'),
+              boxShadow: voiceListening ? '0 4px 12px rgba(233,30,140,0.35)' : 'none'
+            }}>
+            <Volume2 className={`w-5 h-5 ${voiceListening ? 'text-white' : ''}`}
+              style={{ color: voiceListening ? '#fff' : (isDark ? 'rgba(255,255,255,0.65)' : '#e91e8c') }} />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-bold text-primary-content">Voice SOS</p>
+            <p className="text-xs mt-0.5 text-muted-content">
+              {voiceListening ? '🎙 Listening... say "help" or "SOS"' : 'Tap and say "help" to trigger SOS'}
+            </p>
+          </div>
+          {voiceListening && (
+            <div className="flex gap-0.5 items-end h-5">
+              {[3,5,4,6,3].map((h, i) => (
+                <motion.div key={i} className="w-1 rounded-full"
+                  style={{ background: '#e91e8c', height: `${h * 3}px` }}
+                  animate={{ height: [`${h * 3}px`, `${h * 5}px`, `${h * 3}px`] }}
+                  transition={{ duration: 0.5, delay: i * 0.1, repeat: Infinity }}
+                />
+              ))}
+            </div>
+          )}
+        </button>
+
+        {/* ── QUICK STATS ── */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            {
+              label: 'Contacts',
+              value: contactsCount,
+              color: '#e91e8c',
+              bg: isDark ? 'rgba(233,30,140,0.10)' : 'rgba(233,30,140,0.07)',
+              icon: Users
+            },
+            {
+              label: 'Last SOS',
+              value: lastSOSTime ? lastSOSTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+              color: '#ef4444',
+              bg: isDark ? 'rgba(239,68,68,0.10)' : 'rgba(239,68,68,0.07)',
+              icon: ShieldAlert
+            },
+            {
+              label: 'Safety',
+              value: `${safetyScore}%`,
+              color: '#34d399',
+              bg: isDark ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.07)',
+              icon: CheckCircle2
+            },
+          ].map(({ label, value, color, bg, icon: Icon }) => (
+            <div key={label} className="card !p-4 flex flex-col items-center gap-2 text-center">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: bg }}>
+                <Icon className="w-4 h-4" style={{ color }} />
+              </div>
+              <p className="text-lg font-black leading-none text-primary-content">{value}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-content">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── SOS HISTORY ── */}
+        {sosHistory.length > 0 && (
+          <div className="card">
+            <button onClick={() => setShowHistory(h => !h)}
+              className="w-full flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(239,68,68,0.12)' }}>
+                  <AlertTriangle className="w-4 h-4" style={{ color: '#f87171' }} />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-black text-primary-content">SOS History</p>
+                  <p className="text-[10px] mt-0.5 text-muted-content">{sosHistory.length} past alerts</p>
+                </div>
+              </div>
+              <ChevronRight className={`w-4 h-4 text-muted-content transition-transform ${showHistory ? 'rotate-90' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {showHistory && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden mt-3 space-y-2"
+                >
+                  {sosHistory.map((log, i) => (
+                    <div key={log._id || i} className="flex items-center gap-3 p-3 rounded-xl"
+                      style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.04)' }}>
+                      <div className="w-2 h-2 rounded-full shrink-0"
+                        style={{ background: log.status === 'sent' ? '#34d399' : '#f87171' }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-primary-content">
+                          {log.notified} contact{log.notified !== 1 ? 's' : ''} notified
+                        </p>
+                        <p className="text-[10px] mt-0.5 text-muted-content">
+                          {new Date(log.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: log.status === 'sent' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                          color: log.status === 'sent' ? '#34d399' : '#f87171'
+                        }}>
+                        {log.status}
+                      </span>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* ── EMERGENCY HELPLINES ── */}
         <div>
