@@ -10,22 +10,34 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/rakshika';
 
 app.use(express.json());
+
+// ── CORS ──────────────────────────────────────────────────────
+// In production on Render, CLIENT_ORIGIN must be set in the
+// Render dashboard environment variables for the server service.
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
-  'http://192.168.0.0:5173', // or your PC LAN address
-  process.env.CLIENT_ORIGIN
+  // Accept any Render subdomain automatically
+  /\.onrender\.com$/,
+  // Explicit client origin from env
+  process.env.CLIENT_ORIGIN,
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // mobile apps/tools
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    // Check string matches
+    const allowed = allowedOrigins.some(o => {
+      if (typeof o === 'string') return o === origin;
+      if (o instanceof RegExp) return o.test(origin);
+      return false;
+    });
+    if (allowed) return callback(null, true);
+    console.warn('[CORS] Blocked origin:', origin);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
 }));

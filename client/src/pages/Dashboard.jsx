@@ -103,7 +103,7 @@ function ChatAssistant({ onShare, onSOS, isDark }) {
   }
 
   const triggerBg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)'
-  const triggerBorder = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.12)'
+  const triggerBorder = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.12)'
 
   return (
     <>
@@ -140,7 +140,7 @@ function ChatAssistant({ onShare, onSOS, isDark }) {
           >
             {/* Chat header */}
             <div className="flex items-center justify-between px-5 pt-14 pb-4 border-b"
-              style={{ borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.10)' }}>
+              style={{ borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.10)' }}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
                   style={{ background: 'linear-gradient(135deg, #e91e8c, #7b2ff7)' }}>
@@ -158,8 +158,8 @@ function ChatAssistant({ onShare, onSOS, isDark }) {
                 <button onClick={() => setIsVoice(!isVoice)}
                   className="p-2.5 rounded-xl transition-all"
                   style={{
-                    background: isVoice ? 'rgba(233,30,140,0.15)' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(233,30,140,0.06)'),
-                    color: isVoice ? '#e91e8c' : (isDark ? 'rgba(255,255,255,0.70)' : 'rgba(26,10,46,0.55)')
+                    background: isVoice ? 'rgba(233,30,140,0.15)' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(59,130,246,0.06)'),
+                    color: isVoice ? '#e91e8c' : (isDark ? 'rgba(255,255,255,0.70)' : 'rgba(15,23,42,0.72)')
                   }}
                 >
                   {isVoice ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -167,8 +167,8 @@ function ChatAssistant({ onShare, onSOS, isDark }) {
                 <button onClick={() => setOpen(false)}
                   className="p-2.5 rounded-xl transition-all"
                   style={{
-                    background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(233,30,140,0.06)',
-                    color: isDark ? 'rgba(255,255,255,0.70)' : 'rgba(26,10,46,0.55)'
+                    background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(59,130,246,0.06)',
+                    color: isDark ? 'rgba(255,255,255,0.70)' : 'rgba(15,23,42,0.72)'
                   }}
                 >
                   <X className="w-4 h-4" />
@@ -187,7 +187,7 @@ function ChatAssistant({ onShare, onSOS, isDark }) {
                   }`}
                     style={m.role === 'assistant' ? {
                       background: isDark ? 'rgba(255,255,255,0.07)' : '#ffffff',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.10)'}`,
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.10)'}`,
                       color: isDark ? 'rgba(255,255,255,0.92)' : '#1a0a2e'
                     } : {
                       background: 'linear-gradient(135deg, #e91e8c, #7b2ff7)',
@@ -204,8 +204,8 @@ function ChatAssistant({ onShare, onSOS, isDark }) {
                   <div className="px-4 py-3 rounded-2xl rounded-tl-sm flex gap-1.5 items-center"
                     style={{
                       background: isDark ? 'rgba(255,255,255,0.07)' : '#ffffff',
-                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.10)'}`
-                    }}>
+                      border: `1px solid ${isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.10)'}`
+                    }}> 
                     {[0,1,2].map(i => (
                       <motion.div key={i} className="w-1.5 h-1.5 rounded-full"
                         style={{ background: '#e91e8c' }}
@@ -220,7 +220,7 @@ function ChatAssistant({ onShare, onSOS, isDark }) {
 
             {/* Input */}
             <div className="px-4 pb-8 pt-3 border-t flex gap-2"
-              style={{ borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.10)' }}>
+              style={{ borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.10)' }}>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -263,17 +263,10 @@ export default function Dashboard() {
   const [contactsCount, setContactsCount] = useState(0)
   const [isSOSPressed, setIsSOSPressed] = useState(false)
   const [screenShake, setScreenShake] = useState(false)
-  const [sosHistory, setSOSHistory] = useState([])
-  const [showHistory, setShowHistory] = useState(false)
-  const [lastSOSTime, setLastSOSTime] = useState(null)
-  const [lastShareTime, setLastShareTime] = useState(null)
-  const [voiceListening, setVoiceListening] = useState(false)
   const countdownTimer = useRef(null)
   const checkInTimerRef = useRef(null)
   const longPressTimer = useRef(null)
   const lastUpdate = useRef(0)
-  const shakeRef = useRef({ lastX: null, lastY: null, lastZ: null, lastTime: 0 })
-  const tickAudio = useRef(null)
 
   useEffect(() => { getOnce() }, [])
   useEffect(() => {
@@ -328,8 +321,6 @@ export default function Dashboard() {
     }
     try {
       const { data } = await api.post('/sos/trigger', coords)
-      setLastSOSTime(new Date())
-      api.get('/sos/history').then(r => setSOSHistory(r.data)).catch(() => {})
       if (data.notified === 0) { setStatus('SOS Sent (No Contacts!)'); alert('SOS Sent! However, you have no emergency contacts saved in your circle.') }
       else { setStatus(`SOS → ${data.notified} Guardians`); alert(`EMERGENCY SOS SENT! Notified ${data.notified} guardians with your location.`) }
     } catch (e) {
@@ -340,29 +331,10 @@ export default function Dashboard() {
 
   function startSOSCountdown() {
     if (sosCountdown > 0) return
-    // Vibrate pattern
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200])
     setSosCountdown(5)
     countdownTimer.current = setInterval(() => {
       setSosCountdown(prev => {
-        // Tick vibration + beep
-        if (navigator.vibrate) navigator.vibrate(80)
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)()
-          const osc = ctx.createOscillator()
-          const gain = ctx.createGain()
-          osc.connect(gain); gain.connect(ctx.destination)
-          osc.frequency.value = prev <= 2 ? 880 : 440
-          gain.gain.setValueAtTime(0.3, ctx.currentTime)
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15)
-          osc.start(); osc.stop(ctx.currentTime + 0.15)
-        } catch {}
-        if (prev <= 1) {
-          clearInterval(countdownTimer.current)
-          if (navigator.vibrate) navigator.vibrate([400, 100, 400, 100, 400])
-          triggerSOS()
-          return 0
-        }
+        if (prev <= 1) { clearInterval(countdownTimer.current); triggerSOS(); return 0 }
         return prev - 1
       })
     }, 1000)
@@ -390,56 +362,6 @@ export default function Dashboard() {
     fetchContacts()
   }, [])
 
-  // Fetch SOS history
-  useEffect(() => {
-    api.get('/sos/history').then(r => setSOSHistory(r.data)).catch(() => {})
-  }, [])
-
-  // Shake-to-SOS detection
-  useEffect(() => {
-    function handleMotion(e) {
-      const { x, y, z } = e.accelerationIncludingGravity || {}
-      if (x == null) return
-      const now = Date.now()
-      const s = shakeRef.current
-      if (s.lastX !== null && now - s.lastTime > 100) {
-        const delta = Math.abs(x - s.lastX) + Math.abs(y - s.lastY) + Math.abs(z - s.lastZ)
-        if (delta > 60 && now - s.lastTime > 1000) {
-          s.lastTime = now
-          setScreenShake(true)
-          setTimeout(() => setScreenShake(false), 500)
-          startSOSCountdown()
-        }
-      }
-      s.lastX = x; s.lastY = y; s.lastZ = z; s.lastTime = now
-    }
-    window.addEventListener('devicemotion', handleMotion)
-    return () => window.removeEventListener('devicemotion', handleMotion)
-  }, [])
-
-  // Voice SOS — Web Speech Recognition
-  function startVoiceSOS() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) return
-    const rec = new SR()
-    rec.lang = 'en-IN'
-    rec.continuous = false
-    rec.interimResults = false
-    setVoiceListening(true)
-    rec.onresult = (e) => {
-      const transcript = e.results[0][0].transcript.toLowerCase()
-      if (transcript.includes('help') || transcript.includes('sos') || transcript.includes('emergency')) {
-        setScreenShake(true)
-        setTimeout(() => setScreenShake(false), 500)
-        startSOSCountdown()
-      }
-      setVoiceListening(false)
-    }
-    rec.onerror = () => setVoiceListening(false)
-    rec.onend = () => setVoiceListening(false)
-    rec.start()
-  }
-
   const clearNotifications = () => setNotifications([])
   const handleLogout = () => {
     localStorage.removeItem('rakshika_token'); localStorage.removeItem('rakshika_user')
@@ -458,28 +380,32 @@ export default function Dashboard() {
   ]
 
   const panelBg     = isDark ? '#110014' : '#ffffff'
-  const panelBorder = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.14)'
+  const panelBorder = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.14)'
   const panelCls    = `absolute right-0 top-[68px] rounded-3xl shadow-2xl border z-50 overflow-hidden`
 
   return (
-    <div className={`min-h-screen pb-28 ${screenShake ? 'animate-shake' : ''}`}>
+    <div className={`dashboard-shell min-h-screen pb-28 ${screenShake ? 'animate-shake' : ''}`}>
 
       {/* ══════════════════════════════════════
           HEADER
       ══════════════════════════════════════ */}
       <div className="page-header mb-0">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           {/* Brand + greeting */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg"
               style={{ background: 'linear-gradient(135deg, #e91e8c, #7b2ff7)', boxShadow: '0 4px 16px rgba(233,30,140,0.35)' }}>
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-content">Rakshika</p>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-content">Rakshika</p>
+                <span className="badge badge-primary">Premium</span>
+              </div>
               <h1 className="text-lg font-black leading-none text-primary-content">
                 Hey, <span className="gradient-text">{auth?.user?.name?.split(' ')[0] || 'there'}</span>
               </h1>
+              <p className="text-[11px] text-muted-content">Fast action, calm confidence, premium safety.</p>
             </div>
           </div>
 
@@ -487,7 +413,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 relative">
             <motion.button whileTap={{ scale: 0.9 }} onClick={() => setIsDark(!isDark)}
               className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
-              style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(233,30,140,0.07)' }}
+              style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,130,246,0.08)' }}
             >
               {isDark
                 ? <Sun className="w-4 h-4" style={{ color: '#fbbf24' }} />
@@ -497,8 +423,8 @@ export default function Dashboard() {
 
             <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowNotifications(!showNotifications)}
               className="w-10 h-10 rounded-xl flex items-center justify-center relative transition-all"
-              style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(233,30,140,0.07)',
-                       color: isDark ? 'rgba(255,255,255,0.80)' : 'rgba(26,10,46,0.65)' }}
+              style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,130,246,0.08)',
+                       color: isDark ? 'rgba(255,255,255,0.80)' : 'rgba(15,23,42,0.72)' }}
             >
               <Bell className="w-4 h-4" />
               {notifications.length > 0 && (
@@ -525,7 +451,7 @@ export default function Dashboard() {
                     style={{ borderColor: panelBorder, background: panelBg }}>
                     <span className="font-black text-sm text-primary-content">Notifications</span>
                     {notifications.length > 0 && (
-                      <button onClick={clearNotifications} className="text-[11px] font-bold" style={{ color: '#e91e8c' }}>Clear all</button>
+                      <button onClick={clearNotifications} className="text-[11px] font-bold" style={{ color: '#2563eb' }}>Clear all</button>
                     )}
                   </div>
                   <div className="p-3 space-y-2">
@@ -569,19 +495,19 @@ export default function Dashboard() {
                     </div>
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       <div className="rounded-xl p-3 text-center"
-                        style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(233,30,140,0.05)' }}>
+                        style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(59,130,246,0.05)' }}>
                         <p className="text-lg font-black" style={{ color: '#e91e8c' }}>{contactsCount}</p>
                         <p className="text-[10px] mt-0.5 text-muted-content">Contacts</p>
                       </div>
                       <div className="rounded-xl p-3 text-center"
-                        style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(233,30,140,0.05)' }}>
+                        style={{ background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(59,130,246,0.05)' }}>
                         <p className="text-lg font-black" style={{ color: '#34d399' }}>{safetyScore}%</p>
                         <p className="text-[10px] mt-0.5 text-muted-content">Safety</p>
                       </div>
                     </div>
                     <Link to="/contacts" onClick={() => setShowProfile(false)}
                       className="block w-full py-2.5 rounded-xl text-center font-bold text-sm mb-2 transition-all text-primary-content"
-                      style={{ background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(233,30,140,0.06)' }}
+                      style={{ background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(59,130,246,0.06)' }}
                     >Manage Contacts</Link>
                     <button onClick={handleLogout}
                       className="w-full py-2.5 rounded-xl text-center font-bold text-sm transition-all"
@@ -598,39 +524,54 @@ export default function Dashboard() {
       {/* ══════════════════════════════════════
           HERO — SOS + status strip
       ══════════════════════════════════════ */}
-      <div className="relative overflow-hidden px-5 pt-8 pb-10"
+      <div className="dashboard-hero glass-card relative overflow-hidden px-5 pt-8 pb-10"
         style={{
           background: isDark
             ? 'linear-gradient(180deg, #1a0028 0%, #0a0008 100%)'
-            : 'linear-gradient(180deg, #fce7f3 0%, #faf5ff 100%)'
+            : 'linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%)'
         }}
       >
         {/* Ambient glow */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full blur-[70px]"
-            style={{ background: isDark ? 'rgba(239,68,68,0.18)' : 'rgba(239,68,68,0.10)' }} />
+            style={{ background: isDark ? 'rgba(239,68,68,0.18)' : 'rgba(59,130,246,0.12)' }} />
           <div className="absolute top-8 left-1/4 w-48 h-48 rounded-full blur-[60px]"
-            style={{ background: isDark ? 'rgba(233,30,140,0.12)' : 'rgba(233,30,140,0.08)' }} />
+            style={{ background: isDark ? 'rgba(233,30,140,0.12)' : 'rgba(59,130,246,0.10)' }} />
           <div className="absolute top-8 right-1/4 w-48 h-48 rounded-full blur-[60px]"
-            style={{ background: isDark ? 'rgba(123,47,247,0.12)' : 'rgba(123,47,247,0.07)' }} />
+            style={{ background: isDark ? 'rgba(123,47,247,0.12)' : 'rgba(14,165,233,0.10)' }} />
         </div>
 
         <div className="relative z-10 flex flex-col items-center gap-6">
           {/* Status pill */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm border"
-            style={{
-              background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.80)',
-              borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.18)'
-            }}
-          >
+          <div className="status-pill">
             <Activity className="w-3.5 h-3.5" style={{ color: '#34d399' }} />
-            <span className="text-[11px] font-black uppercase tracking-widest"
-              style={{ color: isDark ? 'rgba(255,255,255,0.88)' : 'rgba(26,10,46,0.75)' }}
-            >Shield Active</span>
+            <span>Shield Active</span>
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#34d399' }} />
           </div>
 
-          {/* SOS button */}
+          {/* Premium metrics */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="hero-metrics w-full">
+            <div className="hero-metric">
+              <span className="metric-label">Guardians</span>
+              <div className="metric-value">{contactsCount}</div>
+              <span className="metric-sub">In your safety circle</span>
+            </div>
+            <div className="hero-metric">
+              <span className="metric-label">Safety Score</span>
+              <div className="metric-value">{safetyScore}%</div>
+              <span className="metric-sub">Higher = stronger shield</span>
+            </div>
+            <div className="hero-metric">
+              <span className="metric-label">Live Tracking</span>
+              <div className="metric-value">
+                {isSharing
+                  ? <><Wifi className="w-4 h-4" style={{ color: "#34d399" }} /><span>Active</span></>
+                  : <><WifiOff className="w-4 h-4" style={{ color: "rgba(255,255,255,0.45)" }} /><span>Paused</span></>
+                }
+              </div>
+              <span className="metric-sub">Tap Share to update guardians</span>
+            </div>
+          </motion.div>
           <AnimatePresence mode="wait">
             {sosCountdown > 0 ? (
               <motion.div key="countdown" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
@@ -691,7 +632,7 @@ export default function Dashboard() {
           </AnimatePresence>
 
           <p className="text-xs font-bold uppercase tracking-widest"
-            style={{ color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(26,10,46,0.45)' }}
+            style={{ color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(15,23,42,0.72)' }}
           >
             Hold 0.5s · Alerts all guardians
           </p>
@@ -713,10 +654,10 @@ export default function Dashboard() {
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl backdrop-blur-xl border shadow-lg pointer-events-auto"
                 style={{
                   background: isDark ? 'rgba(10,0,8,0.80)' : 'rgba(255,255,255,0.90)',
-                  borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.18)'
+                  borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.18)'
                 }}>
                 <div className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: isSharing ? '#34d399' : (isDark ? 'rgba(255,255,255,0.40)' : 'rgba(26,10,46,0.30)') }} />
+                  style={{ background: isSharing ? '#34d399' : (isDark ? 'rgba(255,255,255,0.40)' : 'rgba(15,23,42,0.30)') }} />
                 <span className="text-[10px] font-black uppercase tracking-widest text-primary-content">
                   {status || (isSharing ? 'Live' : 'Paused')}
                 </span>
@@ -725,8 +666,8 @@ export default function Dashboard() {
                 className="p-2 rounded-xl backdrop-blur-xl border shadow-lg pointer-events-auto transition-all active:rotate-180 duration-500 hover:scale-105"
                 style={{
                   background: isDark ? 'rgba(10,0,8,0.80)' : 'rgba(255,255,255,0.90)',
-                  borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.18)',
-                  color: isDark ? 'rgba(255,255,255,0.70)' : 'rgba(26,10,46,0.60)'
+                  borderColor: isDark ? 'rgba(255,255,255,0.10)' : 'rgba(59,130,246,0.18)',
+                  color: isDark ? 'rgba(255,255,255,0.70)' : 'rgba(15,23,42,0.72)'
                 }}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -738,14 +679,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-between gap-3 px-4 py-3.5 border-t"
             style={{
               background: isDark ? 'rgba(26,10,46,0.70)' : 'rgba(255,255,255,0.98)',
-              borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(233,30,140,0.10)'
+              borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(59,130,246,0.10)'
             }}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: isSharing ? 'rgba(16,185,129,0.15)' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(233,30,140,0.07)') }}>
+                style={{ background: isSharing ? 'rgba(16,185,129,0.15)' : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(59,130,246,0.08)') }}>
                 <Navigation className="w-4 h-4"
-                  style={{ color: isSharing ? '#34d399' : (isDark ? 'rgba(255,255,255,0.65)' : 'rgba(26,10,46,0.45)') }} />
+                  style={{ color: isSharing ? '#34d399' : (isDark ? 'rgba(255,255,255,0.65)' : 'rgba(15,23,42,0.72)') }} />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-primary-content">
@@ -774,20 +715,20 @@ export default function Dashboard() {
         {/* ── QUICK ACTIONS ROW ── */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { to: '/safe-route', icon: ShieldAlert, label: 'SafeZones', iconColor: '#e91e8c',   darkBg: 'rgba(233,30,140,0.12)', lightBg: 'rgba(233,30,140,0.09)' },
+            { to: '/safe-route', icon: ShieldAlert, label: 'SafeZones', iconColor: '#1d4ed8',   darkBg: 'rgba(59,130,246,0.12)', lightBg: 'rgba(59,130,246,0.09)' },
             { to: '/fake-call',  icon: PhoneCall,   label: 'Fake Call',  iconColor: '#9d4edd',   darkBg: 'rgba(123,47,247,0.12)', lightBg: 'rgba(123,47,247,0.09)' },
             { to: '/contacts',   icon: Users,       label: 'Circle',     iconColor: '#fbbf24',   darkBg: 'rgba(245,166,35,0.14)', lightBg: 'rgba(245,166,35,0.12)' },
             { to: '/share',      icon: MapPin,      label: 'Share',      iconColor: '#34d399',   darkBg: 'rgba(16,185,129,0.12)', lightBg: 'rgba(16,185,129,0.09)' },
           ].map(({ to, icon: Icon, label, iconColor, darkBg, lightBg }) => (
             <Link key={to} to={to}
-              className="card !p-0 flex flex-col items-center gap-2 py-4 hover:scale-[1.04] active:scale-[0.97] transition-all tap-feedback"
+              className="action-card card !p-0 flex flex-col items-center gap-2 py-4 transition-all tap-feedback"
             >
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center"
                 style={{ background: isDark ? darkBg : lightBg }}>
                 <Icon className="w-5 h-5" style={{ color: iconColor }} />
               </div>
               <span className="text-[10px] font-black uppercase tracking-tight text-center leading-tight px-1"
-                style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(26,10,46,0.65)' }}>{label}</span>
+                style={{ color: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(15,23,42,0.78)' }}>{label}</span>
             </Link>
           ))}
         </div>
@@ -800,11 +741,11 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                style={{ background: 'rgba(233,30,140,0.12)' }}>
-                <Clock className="w-4 h-4" style={{ color: '#e91e8c' }} />
+                style={{ background: 'rgba(59,130,246,0.12)' }}>
+                <Clock className="w-4 h-4" style={{ color: '#1d4ed8' }} />
               </div>
               <div>
-                <p className="text-sm font-black text-primary-content">Safety Check-in</p>
+                <p className="section-heading">Safety Check-in</p>
                 <p className="text-[10px] mt-0.5 text-muted-content">Auto-SOS when timer expires</p>
               </div>
             </div>
@@ -823,8 +764,8 @@ export default function Dashboard() {
               >
                 <div className="flex-1 rounded-2xl p-4 text-center border"
                   style={{
-                    background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(233,30,140,0.04)',
-                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(233,30,140,0.10)'
+                    background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.04)',
+                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(148,163,184,0.20)'
                   }}
                 >
                   <div className="text-4xl font-black tabular-nums tracking-tighter text-primary-content">
@@ -851,13 +792,13 @@ export default function Dashboard() {
                 {[15, 30, 60].map(mins => (
                   <button key={mins} onClick={() => startCheckIn(mins)}
                     className="flex flex-col items-center gap-1 py-3.5 rounded-2xl border transition-all tap-feedback"
-                    style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(233,30,140,0.12)' }}
+                    style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,130,246,0.12)' }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = 'rgba(233,30,140,0.40)'
-                      e.currentTarget.style.background = isDark ? 'rgba(233,30,140,0.06)' : 'rgba(233,30,140,0.05)'
+                      e.currentTarget.style.borderColor = 'rgba(59,130,246,0.40)'
+                      e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,130,246,0.05)'
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(233,30,140,0.12)'
+                      e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,130,246,0.12)'
                       e.currentTarget.style.background = 'transparent'
                     }}
                   >
@@ -873,134 +814,10 @@ export default function Dashboard() {
         {/* ── AI ASSISTANT ── */}
         <ChatAssistant onShare={() => !isSharing && toggleSharing()} onSOS={startSOSCountdown} isDark={isDark} />
 
-        {/* ── VOICE SOS ── */}
-        <button onClick={startVoiceSOS}
-          className="w-full flex items-center gap-4 p-4 rounded-2xl border transition-all tap-feedback"
-          style={{
-            background: voiceListening
-              ? (isDark ? 'rgba(233,30,140,0.12)' : 'rgba(233,30,140,0.08)')
-              : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.85)'),
-            borderColor: voiceListening ? 'rgba(233,30,140,0.40)' : (isDark ? 'rgba(255,255,255,0.10)' : 'rgba(233,30,140,0.12)')
-          }}
-        >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{
-              background: voiceListening ? 'linear-gradient(135deg, #e91e8c, #7b2ff7)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(233,30,140,0.08)'),
-              boxShadow: voiceListening ? '0 4px 12px rgba(233,30,140,0.35)' : 'none'
-            }}>
-            <Volume2 className={`w-5 h-5 ${voiceListening ? 'text-white' : ''}`}
-              style={{ color: voiceListening ? '#fff' : (isDark ? 'rgba(255,255,255,0.65)' : '#e91e8c') }} />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-bold text-primary-content">Voice SOS</p>
-            <p className="text-xs mt-0.5 text-muted-content">
-              {voiceListening ? '🎙 Listening... say "help" or "SOS"' : 'Tap and say "help" to trigger SOS'}
-            </p>
-          </div>
-          {voiceListening && (
-            <div className="flex gap-0.5 items-end h-5">
-              {[3,5,4,6,3].map((h, i) => (
-                <motion.div key={i} className="w-1 rounded-full"
-                  style={{ background: '#e91e8c', height: `${h * 3}px` }}
-                  animate={{ height: [`${h * 3}px`, `${h * 5}px`, `${h * 3}px`] }}
-                  transition={{ duration: 0.5, delay: i * 0.1, repeat: Infinity }}
-                />
-              ))}
-            </div>
-          )}
-        </button>
-
-        {/* ── QUICK STATS ── */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            {
-              label: 'Contacts',
-              value: contactsCount,
-              color: '#e91e8c',
-              bg: isDark ? 'rgba(233,30,140,0.10)' : 'rgba(233,30,140,0.07)',
-              icon: Users
-            },
-            {
-              label: 'Last SOS',
-              value: lastSOSTime ? lastSOSTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
-              color: '#ef4444',
-              bg: isDark ? 'rgba(239,68,68,0.10)' : 'rgba(239,68,68,0.07)',
-              icon: ShieldAlert
-            },
-            {
-              label: 'Safety',
-              value: `${safetyScore}%`,
-              color: '#34d399',
-              bg: isDark ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.07)',
-              icon: CheckCircle2
-            },
-          ].map(({ label, value, color, bg, icon: Icon }) => (
-            <div key={label} className="card !p-4 flex flex-col items-center gap-2 text-center">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: bg }}>
-                <Icon className="w-4 h-4" style={{ color }} />
-              </div>
-              <p className="text-lg font-black leading-none text-primary-content">{value}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-muted-content">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ── SOS HISTORY ── */}
-        {sosHistory.length > 0 && (
-          <div className="card">
-            <button onClick={() => setShowHistory(h => !h)}
-              className="w-full flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: 'rgba(239,68,68,0.12)' }}>
-                  <AlertTriangle className="w-4 h-4" style={{ color: '#f87171' }} />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-black text-primary-content">SOS History</p>
-                  <p className="text-[10px] mt-0.5 text-muted-content">{sosHistory.length} past alerts</p>
-                </div>
-              </div>
-              <ChevronRight className={`w-4 h-4 text-muted-content transition-transform ${showHistory ? 'rotate-90' : ''}`} />
-            </button>
-            <AnimatePresence>
-              {showHistory && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden mt-3 space-y-2"
-                >
-                  {sosHistory.map((log, i) => (
-                    <div key={log._id || i} className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.04)' }}>
-                      <div className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: log.status === 'sent' ? '#34d399' : '#f87171' }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-primary-content">
-                          {log.notified} contact{log.notified !== 1 ? 's' : ''} notified
-                        </p>
-                        <p className="text-[10px] mt-0.5 text-muted-content">
-                          {new Date(log.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{
-                          background: log.status === 'sent' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                          color: log.status === 'sent' ? '#34d399' : '#f87171'
-                        }}>
-                        {log.status}
-                      </span>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
-
         {/* ── EMERGENCY HELPLINES ── */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-black text-primary-content">Emergency Helplines</p>
+            <p className="section-heading">Emergency Helplines</p>
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-content">One tap</span>
           </div>
           <div className="grid grid-cols-3 gap-2.5">
@@ -1020,12 +837,12 @@ export default function Dashboard() {
         </div>
 
         {/* ── SAFETY TIP ── */}
-        <div className="relative overflow-hidden rounded-2xl p-5 border"
+        <div className="relative overflow-hidden rounded-2xl p-5 border glass-card"
           style={{
             background: isDark
               ? 'linear-gradient(135deg, #1a0a2e 0%, #110014 100%)'
-              : 'linear-gradient(135deg, #fce7f3 0%, #ede0ff 100%)',
-            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(233,30,140,0.15)'
+              : 'linear-gradient(135deg, #eff6ff 0%, #eef4ff 100%)',
+            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(59,130,246,0.15)'
           }}
         >
           <div className="flex items-start gap-3 relative z-10">
@@ -1035,15 +852,15 @@ export default function Dashboard() {
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest mb-1 block"
-                style={{ color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(26,10,46,0.50)' }}>Safety Tip</span>
+                style={{ color: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(15,23,42,0.72)' }}>Safety Tip</span>
               <p className="text-sm font-semibold leading-relaxed"
-                style={{ color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(26,10,46,0.85)' }}>
+                style={{ color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.88)' }}>
                 Always share your ride details with a trusted contact before entering a taxi or cab.
               </p>
             </div>
           </div>
           <Lock className="absolute -bottom-3 -right-3 w-20 h-20 rotate-12"
-            style={{ color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(26,10,46,0.05)' }} />
+            style={{ color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.08)' }} />
         </div>
 
         <p className="text-center text-[10px] font-black uppercase tracking-[0.25em] pb-2 text-faint-content">
@@ -1068,7 +885,7 @@ export default function Dashboard() {
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-[9px] font-bold">{label}</span>
-                {active && <div className="w-4 h-0.5 rounded-full mt-0.5" style={{ background: '#e91e8c' }} />}
+                {active && <div className="w-4 h-0.5 rounded-full mt-0.5" style={{ background: '#2563eb' }} />}
               </motion.div>
             </Link>
           ))}

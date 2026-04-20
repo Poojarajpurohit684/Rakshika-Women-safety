@@ -1,24 +1,27 @@
 import axios from 'axios'
-import { apiBase, getToken } from './auth'
+
+const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:5000'
 
 export const api = axios.create({
-  baseURL: apiBase(),
+  baseURL: BASE_URL,
 })
 
 api.interceptors.request.use((config) => {
-  const t = getToken()
-  if (t) config.headers.Authorization = `Bearer ${t}`
+  const token = localStorage.getItem('rakshika_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
       localStorage.removeItem('rakshika_token')
+      localStorage.removeItem('rakshika_user')
       window.location.href = '/login'
     }
-    return Promise.reject(error)
+    return Promise.reject(err)
   }
 )
 
+export default api
